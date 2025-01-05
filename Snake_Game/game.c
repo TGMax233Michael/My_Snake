@@ -1,331 +1,584 @@
+#include "menu.h"
 #include "game.h"
 #include <windows.h>
 #include <conio.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
-char Game_Difficulty[5][10] = {
+char Menu_Text[4][20] = {
+    "Start Game",
+    "Game Setting",
+    "Rank",
+    "Quit"
+};
+
+char Game_Difficulty_Setting[6][10] = {
     "Noob",
     "Easy",
     "Normal",
     "Hard",
     "Extreme",
+    "Back"
 };
 
-char Map_Scale[3][10] = {
+char Map_Scale_Setting[4][10] = {
     "Small",
     "Normal",
-    "Large"
+    "Large",
+    "Back"
 };
 
-// ========================================================================================================
-HANDLE hdl;
+char Game_Setting[4][12] = {
+    "Difficulty",
+    "Map Scale",
+    "Snake Color",
+    "Back"
+};
 
-// 游戏界面
-double map_scale_list[] = {1, 1.2, 1.4};
+char Color_Setting[6][10] = {
+    "White",
+    "Red",
+    "Yellow",
+    "Blue",
+    "Green",
+    "Back"
+};
 
-// 蛇
-snake_node *head; // 蛇的身体数组
-snake_node *tail;
-int size; // 蛇的大小
+char Rank[3][6] = {
+    "Month",
+    "Year",
+    "Back"
+};
 
-// 苹果
-COORD apple;
+int difficulty;
+int map_scale;
+int color = WHITE;
+data_node *_head = NULL;
+HANDLE hdl_menu;
+// ##########################################################################################################
+// 聲明
+void display_main_menu(int pos);
 
-// 玩家數據
-char player_name[40];
-data_node *data_head;
-int score;
-int len;
-time_i start_time;
-// ========================================================================================================
+void display_difficulty_menu(int pos);
 
-// 声明
-void show_map(double map_size);
-void show_info(int score, double map_size, int difficulty, int map_scale_);
-void show_snake();
-void init_snake(double map_size);
-void init_apple(double map_size);
-void show_apple();
-void refresh_snake(int direction);
-void remove_object(COORD obj_pos);
-void set_color(int color);
-int get_state(double map_size);
-void save_score();
-void read_score();
-void append_score(int difficulty, int map_scale_);
-void free_score();
-void check_score();
-void get_len();
-void get_time();
-void clear_keyboard_buffer();
+void display_setting_menu(int pos);
 
-// ========================================================================================================
+int move_ptr(int pos, int max_index, char ch);
 
+void choose_main(int pos, int difficulty, int map_scale);
 
-// 顯示地圖
-void show_map(double map_size) {
-    for (int i = 0; i <= (int) (map_size * HEIGHT) + 2; i++) {
-        for (int j = 0; j <= (int) (map_size * WIDTH) + 2; j++) {
-            if ((i == 0 || i == (int) (map_size * HEIGHT) + 2) || (j == 0 || j == (int) (map_size * WIDTH) + 2)) {
-                set_color(LIGHT_GREEN);
-                putchar('#');
-                set_color(WHITE);
-            } else putchar(' ');
+void choose_setting(int pos);
+
+void read_data();
+
+void set_text_color(int color);
+
+void display_rank(int command);
+
+int menu_get_time(int command);
+
+void display_current_game_settings();
+// ##########################################################################################################
+
+// 顯示主菜單
+void display_main_menu(int pos) {
+    printf("=====MAIN MENU=====");
+    printf("\n");
+    set_text_color(YELLOW);
+    for (int i = 0; i < 4; i++) {
+        if (i != pos - 1) {
+            printf("  %s\n", Menu_Text[i]);
+        } else {
+            set_text_color(WHITE);
+            printf(">>");
+            if (i == 3) set_text_color(RED | DARK_GRAY << 4 | HIGH);
+            else set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            printf("%s\n", Menu_Text[i]);
+            set_text_color(YELLOW);
         }
-        putchar('\n');
     }
+    set_text_color(WHITE);
+    printf("===================");
+    printf("\n");
+
+    set_text_color(WHITE);
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
 }
 
-// 顯示分數
-void show_info(int score, double map_size, int difficulty, int map_scale_) {
-    // 顯示玩家名稱
-    COORD pos = {(int) (WIDTH * map_size) + 5, 0};
-    SetConsoleCursorPosition(hdl, pos);
-    printf("Player: ");
-    set_color(YELLOW | HIGH);
-    printf("%s", player_name);
+// 顯示困難選擇菜單
+void display_difficulty_menu(int pos) {
+    printf("==DIFFICULTY==");
+    printf("\n");
 
+    for (int i = 0; i < 6; i++) {
+        switch (i+1) {
+            case 1:
+                set_text_color(LIGHT_GREEN | HIGH);
+                break;
+            case 2:
+                set_text_color(BLUE | HIGH);
+                break;
+            case 3:
+                set_text_color(YELLOW | HIGH);
+                break;
+            case 4:
+                set_text_color(RED | HIGH);
+                break;
+            case 5:
+                set_text_color(PURPLE | HIGH);
+                break;
+            default:
+                set_text_color(WHITE | HIGH);
+                break;
+        }
 
-    // 顯示分數
-    pos = (COORD){(int) (WIDTH * map_size) + 5, 1};
-    SetConsoleCursorPosition(hdl, pos);
-    printf("Score: ", score);
-    set_color(BLUE | HIGH);
-    printf("%d", score);
-    set_color(WHITE);
+        if (i != pos - 1) printf("  %s\n", Game_Difficulty_Setting[i]);
+        else {
+            set_text_color(WHITE);
+            printf(">>");
+            switch (i+1) {
+                case 1:
+                    set_text_color(LIGHT_GREEN | DARK_GRAY << 4 | HIGH);
+                    break;
+                case 2:
+                    set_text_color(BLUE | DARK_GRAY << 4 | HIGH);
+                    break;
+                case 3:
+                    set_text_color(YELLOW | DARK_GRAY << 4 | HIGH);
+                    break;
+                case 4:
+                    set_text_color(RED | DARK_GRAY << 4 | HIGH);
+                    break;
+                case 5:
+                    set_text_color(PURPLE | DARK_GRAY << 4 | HIGH);
+                    break;
+                default:
+                    set_text_color(GREEN | DARK_GRAY << 4);
+                    break;
+            }
+            printf("%s\n", Game_Difficulty_Setting[i]);
+            set_text_color(YELLOW);
+        }
+    }
 
-    // 顯示游戲難度
-    pos = (COORD){(int) (WIDTH * map_size) + 5, 2};
-    SetConsoleCursorPosition(hdl, pos);
+    set_text_color(WHITE);
+    printf("=============");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
+}
+
+// 顯示設置菜單
+void display_setting_menu(int pos) {
+    printf("====SETTINGS====");
+    printf("\n");
+
+    set_text_color(YELLOW);
+    for (int i = 0; i < 4; i++) {
+        if (i != pos - 1) printf("  %s\n", Game_Setting[i]);
+        else {
+            set_text_color(WHITE);
+            printf(">>");
+            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            printf("%s\n", Game_Setting[i]);
+            set_text_color(YELLOW);
+        }
+    }
+
+    set_text_color(WHITE);
+    printf("================");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
+}
+
+// 顯示地圖尺寸選擇菜單
+void display_map_scale_menu(int pos) {
+    printf("==MAP SCALE==");
+    printf("\n");
+    set_text_color(YELLOW);
+    for (int i = 0; i < 4; i++) {
+        if (i != pos - 1) printf("  %s\n", Map_Scale_Setting[i]);
+        else {
+            set_text_color(WHITE);
+            printf(">>");
+            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            printf("%s\n", Map_Scale_Setting[i]);
+            set_text_color(YELLOW);
+        }
+    }
+    set_text_color(WHITE);
+    printf("=============");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
+}
+
+// 顯示蛇的模型
+void display_snake_model(int color) {
+    SetConsoleCursorPosition(hdl_menu, (COORD){13, 1});
+    printf("|EXAMPLE|");
+    for (int i = 0; i < 4; i++) {
+        SetConsoleCursorPosition(hdl_menu, (COORD){17, 2+i});
+        if (i == 0) {
+            set_text_color(GREEN);
+            putchar('O');
+        } else {
+            set_text_color(color);
+            putchar('o');
+        }
+    }
+
+    set_text_color(WHITE);
+    SetConsoleCursorPosition(hdl_menu, (COORD){0, 0});
+}
+
+// 顯示顔色選擇菜單
+void display_color_menu(int pos) {
+    printf("===COLOR===");
+    printf("\n");
+
+    for (int i = 0; i < 6; i++) {
+        switch (i + 1) {
+            case 2:
+                set_text_color(RED);
+                break;
+            case 3:
+                set_text_color(YELLOW);
+                break;
+            case 4:
+                set_text_color(BLUE);
+                break;
+            case 5:
+                set_text_color(GREEN);
+                break;
+            default:
+                set_text_color(WHITE);
+                break;
+        }
+
+        if (i != pos - 1) printf("  %s\n", Color_Setting[i]);
+        else {
+            printf(">>");
+            if (i == 5) set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            else set_text_color(DARK_GRAY << 4);
+            printf("%s\n", Color_Setting[i]);
+        }
+    }
+
+    set_text_color(WHITE);
+    printf("===========");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
+}
+
+// 顯示排行榜類別選擇菜單
+void display_rank_menu(int pos) {
+    printf("====RANK====");
+    printf("\n");
+    set_text_color(YELLOW);
+    for (int i = 0; i < 3; i++) {
+        if (i != pos - 1) printf("  %s\n", Rank[i]);
+        else {
+            set_text_color(WHITE);
+            printf(">>");
+            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            printf("%s\n", Rank[i]);
+            set_text_color(YELLOW);
+        }
+    }
+    set_text_color(WHITE);
+    printf("============");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+}
+
+// 顯示當前游戲設置
+void display_current_game_settings() {
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 1});
+    printf("CURRENT GAME SETTINGS");
+
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 2});
     printf("Difficulty: ");
     switch (difficulty) {
         case 1:
-            set_color(LIGHT_GREEN | HIGH);
+            set_text_color(LIGHT_GREEN | HIGH);
             break;
         case 2:
-            set_color(BLUE | HIGH);
+            set_text_color(BLUE | HIGH);
             break;
         case 3:
-            set_color(YELLOW | HIGH);
+            set_text_color(YELLOW | HIGH);
             break;
         case 4:
-            set_color(RED | HIGH);
+            set_text_color(RED | HIGH);
             break;
         case 5:
-            set_color(PURPLE | HIGH);
+            set_text_color(PURPLE | HIGH);
             break;
     }
-    printf("%s", Game_Difficulty[difficulty-1]);
-    set_color(WHITE);
+    printf("%s", Game_Difficulty_Setting[difficulty-1]);
 
-    // 顯示地圖大小
-    pos = (COORD){(int) (WIDTH * map_size) + 5, 3};
-    SetConsoleCursorPosition(hdl, pos);
+
+    set_text_color(WHITE);
+    SetConsoleCursorPosition(hdl_menu, (COORD){25, 3});
     printf("Map Scale: ");
-    set_color(YELLOW);
-    printf("%s", Map_Scale[map_scale_ - 1]);
+    set_text_color(YELLOW | HIGH);
+    printf("%s", Map_Scale_Setting[map_scale-1]);
 
-    // 顯示當前時間
-    set_color(LIGHT_BLUE | HIGH);
-    pos = (COORD){(int) (WIDTH * map_size) + 5, 4};
-    SetConsoleCursorPosition(hdl, pos);
-    time_t cur_time = time(NULL);
-    struct tm *cur_time_ = localtime(&cur_time);
-    char buffer[25];
-    strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", cur_time_);
-    printf("%s", buffer);
-}
-
-// 初始化苹果
-void init_apple(double map_size) {
-    int flag = 1;
-    snake_node *current = head;
-
-    while (flag) {
-        flag = 0;
-        apple.X = rand() % (int) (map_size * WIDTH) + 1;
-        apple.Y = rand() % (int) (map_size * HEIGHT) + 1;
-
-        while (current) {
-            if (current->body_node.X == apple.X && current->body_node.Y == apple.Y) {
-                flag = 1;
-                break;
-            }
-            current = current->next;
-        }
+    set_text_color(WHITE);
+    SetConsoleCursorPosition(hdl_menu, (COORD){25, 4});
+    printf("Snake Color: ");
+    set_text_color(color);
+    switch (color) {
+        case WHITE:
+            printf("White");
+            break;
+        case YELLOW:
+            printf("Yellow");
+            break;
+        case GREEN:
+            printf("Green");
+            break;
+        case RED:
+            printf("Red");
+            break;
+        case BLUE:
+            printf("BLUE");
+            break;
     }
+    set_text_color(WHITE);
+
+    SetConsoleCursorPosition(hdl_menu, (COORD){0, 0});
 }
 
-// 初始化蛇
-void init_snake(double map_size) {
-    size = 4;
-    snake_node *current = head;
-    snake_node *last = NULL;
-    for (int i = 0; i < size; i++) {
-        current = (snake_node *) malloc(sizeof(snake_node));
-        current->body_node = (COORD){(map_size * WIDTH / 2), (map_size * HEIGHT / 2) + i};
-        current->next = NULL;
-
-        if (head) {
-            last->next = current;
-            last = last->next;
-        } else {
-            head = current;
-            last = head;
-        }
+// 光標移動
+int move_ptr(int pos, int max_index, char ch) {
+    if (ch == 'w' || ch == 'W' || ch == 72) {
+        if (pos > 1) return pos - 1;
+        return 1;
     }
 
-    tail = current;
-}
-
-// 顯示蛇
-void show_snake(int color) {
-    snake_node *current = head;
-    int i = 0;
-
-    while (current) {
-        SetConsoleCursorPosition(hdl, current->body_node);
-        if (i++ == 0) {
-            set_color(GREEN);
-            putchar('@');
-        } else {
-            set_color(color);
-            putchar('o');
-        }
-
-        current = current->next;
+    if (ch == 's' || ch == 'S' || ch == 80) {
+        if (pos < max_index) return pos + 1;
+        return max_index;
     }
-
-    set_color(WHITE);
+    return pos;
 }
 
-// 顯示苹果
-void show_apple() {
-    SetConsoleCursorPosition(hdl, apple);
-    set_color(RED);
-    putchar('*');
-    set_color(WHITE);
-}
-
-// 刷新蛇
-void refresh_snake(int direction) {
-    snake_node *current = head;
-    snake_node *new_head = NULL;
-
-    new_head = (snake_node *) malloc(sizeof(snake_node));
-    new_head->body_node = head->body_node;
-    new_head->next = head;
-
-
-    switch (direction) {
+// 選擇主菜單
+void choose_main(int pos, int difficulty, int map_scale) {
+    switch (pos) {
         case 1:
-            new_head->body_node.Y -= 1;
+            game(difficulty, map_scale, color);
+
+        // 重置難度
+            difficulty = 3;
+            map_scale = 1;
             break;
         case 2:
-            new_head->body_node.Y += 1;
+            // 顯示設置窗口
+            system("cls");
+            SetConsoleTitle("Settings");
+            int setting_pos = 1;
+            display_setting_menu(setting_pos);
+            while (1) {
+                if (kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                        setting_pos = move_ptr(setting_pos, 4, ch);
+                        system("cls");
+                        display_setting_menu(setting_pos);
+                    }
+
+                    if (ch == '\r') {
+                        if (setting_pos == 4) {
+                            system("cls");
+                            break;
+                        }
+
+                        choose_setting(setting_pos);
+                        display_setting_menu(setting_pos);
+                    }
+                }
+            }
             break;
+
         case 3:
-            new_head->body_node.X -= 1;
-            break;
+            system("cls");
+            SetConsoleTitle("Rank");
+            system("mode con cols=50 lines=10");
+            read_data();
+            int rank_pos = 1;
+            display_rank_menu(rank_pos);
+            while (1) {
+                if (kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                        rank_pos = move_ptr(rank_pos, 3, ch);
+                        system("cls");
+                        display_rank_menu(rank_pos);
+                    }
+                    if (ch == '\r') {
+                        if (rank_pos <= 2) {
+                            system("mode con cols=50 lines=36");
+                            display_rank(rank_pos - 1);
+                            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+                            printf(">>Back\n");
+                            while (1) if (kbhit()) {
+                                char ch = _getch();
+                                if (ch == '\r') break;
+                            }
+                            set_text_color(WHITE);
+                            system("cls");
+                            system("mode con cols=50 lines=10");
+                            display_rank_menu(rank_pos);
+                        }
+
+                        else break;
+                    }
+                }
+            }
+        break;
+
         case 4:
-            new_head->body_node.X += 1;
+            exit(0);
+    }
+}
+
+// 選擇設置菜單
+void choose_setting(int pos) {
+    switch (pos) {
+        case 1:
+            // 顯示難度選擇窗口
+            system("cls");
+            system("mode con cols=50 lines=12");
+            SetConsoleTitle("Settings - Difficulty");
+            int difficulty_pos = 1;
+            display_difficulty_menu(difficulty_pos);
+            while (1) {
+                if (kbhit()) {
+                    char ch = ' ';
+                    ch = _getch();
+                    if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                        difficulty_pos = move_ptr(difficulty_pos, 6, ch);
+                        system("cls");
+                        display_difficulty_menu(difficulty_pos);
+                    }
+
+                    if (ch == '\r') {
+                        if (difficulty_pos < 6) difficulty = difficulty_pos;
+                        system("cls");
+                        system("mode con cols=50 lines=10");
+                        break;
+                    }
+                }
+            }
+            break;
+
+        case 2:
+            // 顯示地圖大小選擇窗口
+            system("cls");
+            SetConsoleTitle("Settings - Map Scale");
+            int map_scale_pos = 1;
+            display_map_scale_menu(map_scale_pos);
+            while (1) {
+                if (kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                        map_scale_pos = move_ptr(map_scale_pos, 4, ch);
+                        system("cls");
+                        display_map_scale_menu(map_scale_pos);
+                    }
+
+                    if (ch == '\r') {
+                        if (map_scale_pos < 4) map_scale = map_scale_pos;
+                        system("cls");
+                        break;
+                    }
+                }
+            }
+            break;
+
+        case 3:
+            system("cls");
+            system("mode con cols=60 lines=12");
+            SetConsoleTitle("Settings - Snake Color");
+            int color_pos = 1;
+            display_color_menu(color_pos);
+            display_snake_model(WHITE);
+            while (1) {
+                if (kbhit()) {
+                    char ch = _getch();
+                    if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                        color_pos = move_ptr(color_pos, 6, ch);
+                        system("cls");
+                        switch (color_pos) {
+                            case 1:
+                                display_snake_model(WHITE);
+                                break;
+                            case 2:
+                                display_snake_model(RED);
+                                break;
+                            case 3:
+                                display_snake_model(YELLOW);
+                                break;
+                            case 4:
+                                display_snake_model(BLUE);
+                                break;
+                            case 5:
+                                display_snake_model(GREEN);
+                                break;
+                        }
+
+                        display_color_menu(color_pos);
+                    }
+
+                    if (ch == '\r') {
+                        switch (color_pos) {
+                            case 1:
+                                color = WHITE;
+                                break;
+                            case 2:
+                                color = RED;
+                                break;
+                            case 3:
+                                color = YELLOW;
+                                break;
+                            case 4:
+                                color = BLUE;
+                                break;
+                            case 5:
+                                color = GREEN;
+                                break;
+                        }
+                        system("cls");
+                        system("mode con cols=50 lines=10");
+                        break;
+                    }
+                }
+            }
+
             break;
     }
-
-    head = new_head;
-
-    while (current->next->next) current = current->next;
-    free(tail);
-    tail = current;
-    tail->next = NULL;
 }
 
-// 移除对象
-void remove_object(COORD obj_pos) {
-    SetConsoleCursorPosition(hdl, obj_pos);
-    putchar(' ');
-}
-
-// 獲取當前狀態
-int get_state(double map_size) {
-    // 0 -> 游戏继续
-    // 1 -> 游戏结束
-    // 2 -> 吃到苹果
-    snake_node *current = head->next;
-
-
-    // 1.1 蛇是否碰到边界
-    if (head->body_node.X == 0 || head->body_node.X == (int) (map_size * WIDTH) + 2 ||
-        head->body_node.Y == 0 || head->body_node.Y == (int) (map_size * HEIGHT) + 2)
-        return 1;
-
-    // 1.2 蛇是否碰到自己
-    for (int i = 1; i < size; i++) {
-        if (head->body_node.X == current->body_node.X && head->body_node.Y == current->body_node.Y) {
-            return 1;
-        }
-        current = current->next;
-    }
-
-    // 2 吃到苹果
-    if (head->body_node.X == apple.X && head->body_node.Y == apple.Y) {
-        return 2;
-    }
-
-
-    return 0;
-}
-
-// 蛇長度增加
-void expand_snake() {
-    snake_node *new_tail = (snake_node *) malloc(sizeof(snake_node));
-
-    size += 1;
-
-    new_tail->body_node = tail->body_node;
-    new_tail->next = NULL;
-    tail->next = new_tail;
-
-    tail = new_tail;
-}
-
-// 釋放内存
-void free_snake() {
-    snake_node *current = head;
-    snake_node *last = NULL;
-
-    while (current) {
-        last = current;
-        current = current->next;
-        free(last);
-    }
-}
-
-// 保存數據
-void save_score() {
-    FILE *file = fopen("rank.txt", "w");
-
-    data_node *current = data_head;
-    while (current) {
-        fprintf(file, "%s\n", current->name);
-        fprintf(file, "%d\n", current->score);
-        fprintf(file, "%d\n", current->difficulty);
-        fprintf(file, "%d\n", current->map_scale);
-        fprintf(file, "%d %d %d %d %d %d\n",
-                current->time_info.year, current->time_info.month, current->time_info.day,
-                current->time_info.hour, current->time_info.minute, current->time_info.second);
-
-        current = current->next;
-    }
-    fclose(file);
-}
-
-// 讀取數據
-void read_score() {
+// 讀取資料
+void read_data() {
     FILE *file = fopen("rank.txt", "r");
-    data_head = NULL;
+    _head = NULL;
     data_node *last = NULL;
     char tmp_name[40];
 
@@ -344,8 +597,8 @@ void read_score() {
 
         new_node->next = NULL;
 
-        if (data_head == NULL) {
-            data_head = new_node;
+        if (_head == NULL) {
+            _head = new_node;
             last = new_node;
         } else {
             last->next = new_node;
@@ -356,244 +609,136 @@ void read_score() {
     fclose(file);
 }
 
-// 添加數據
-void append_score(int difficulty, int map_scale_) {
-    data_node *new_node = (data_node *) malloc(sizeof(data_node));
+// 顯示名次
+void display_rank(int command) {
+    int condition;
+    if (command == 0) condition = menu_get_time(0);
+    else if (command == 1) condition = menu_get_time(1);
+    else return;
 
-    // 复制玩家名称
-    if (strlen(player_name) == 0) strcpy(new_node->name, "player"); // 使用默认名称
-    else strcpy(new_node->name, player_name);
+    int i = 0;
+    data_node *current = _head;
 
-    // 设置新节点的分数和难度
-    new_node->score = score;
-    new_node->difficulty = difficulty;
-    new_node->map_scale = map_scale_;
-    new_node->time_info = start_time;
-    new_node->next = NULL;
-
-    // 链表为空的情况
-    if (data_head == NULL) {
-        data_head = new_node;
-        len++;
-        return;
+    printf("=============RANK=============\n");
+    if (_head == NULL) {
+        printf("No Data!\n");
+        printf("==============================\n");
     }
 
-    // 链表只有一个节点的情况
-    if (data_head->next == NULL) {
-        if (new_node->score > data_head->score) {
-            new_node->next = data_head;
-            data_head = new_node;
-        } else {
-            data_head->next = new_node;
-        }
-        len++;
-        return;
-    }
-
-    // 链表有多于一个节点的情况
-    data_node *current = data_head;
-    data_node *last = NULL;
-
-    while (current != NULL && current->score > new_node->score) {
-        last = current;
-        current = current->next;
-    }
-
-    if (last == NULL) {
-        // 新节点分数最高，插入到头部
-        new_node->next = data_head;
-        data_head = new_node;
-    } else {
-        // 插入新节点到链表中
-        new_node->next = last->next;
-        last->next = new_node;
-    }
-    len++;
-
-    // 如果链表长度超过20，删除尾部节点
-    if (len > 20) {
-        last = data_head;
-        for (int i = 0; i < len - 2; i++) {
-            last = last->next;
+    while (i < 5 && current != NULL) {
+        // 如果不是今年的, 則直接跳過
+        if (command == 0 && current->time_info.year * 100 + current->time_info.month != condition ||
+            command == 1 && current->time_info.year != condition) {
+            current = current->next;
+            continue;
         }
 
-        data_node *temp = last->next;
-        last->next = NULL; // 防止内存泄漏
-        free(temp);
-        len--;
-    }
-}
+        set_text_color(WHITE);
+        printf("Player Name: ");
+        set_text_color(YELLOW | HIGH);
+        printf("%s\n", current->name);
 
-// 釋放玩家數據
-void free_score() {
-    data_node *current = data_head;
-    data_node *last = NULL;
+        set_text_color(WHITE);
+        printf("Score: ");
+        set_text_color(LIGHT_BLUE | HIGH);
+        printf("%d\n", current->score);
 
-    while (current) {
-        last = current;
+        set_text_color(WHITE);
+        printf("Difficulty: ");
+        switch (current->difficulty) {
+            case 1:
+                set_text_color(LIGHT_GREEN | HIGH);
+                break;
+            case 2:
+                set_text_color(BLUE | HIGH);
+                break;
+            case 3:
+                set_text_color(YELLOW | HIGH);
+                break;
+            case 4:
+                set_text_color(RED | HIGH);
+                break;
+            case 5:
+                set_text_color(PURPLE | HIGH);
+                break;
+        }
+
+        printf("%s\n", Game_Difficulty_Setting[current->difficulty - 1]);
+        set_text_color(WHITE);
+        printf("Map Scale: ");
+        set_text_color(LIGHT_GREEN | HIGH);
+        printf("%s\n", Map_Scale_Setting[current->map_scale - 1]);
+
+        set_text_color(WHITE);
+        printf("Play Time: ");
+        set_text_color(LIGHT_BLUE | HIGH);
+        printf("%.4d-%.2d-%.2d %.2d:%.2d:%.2d\n",
+                current->time_info.year+1900, current->time_info.month+1,
+                current->time_info.day, current->time_info.hour,
+                current->time_info.minute, current->time_info.second);
+        set_text_color(WHITE);
+
+        printf("==============================\n");
+
         current = current->next;
-        free(last);
+        i++;
     }
-}
 
-// 獲取排行榜長度
-void get_len() {
-    data_node *current = data_head;
-    len = 0;
-    while (current) {
-        current = current->next;
-        len += 1;
-    }
 }
 
 // 設置文本顔色
-void set_color(int color) {
-    SetConsoleTextAttribute(hdl, color);
+void set_text_color(int color) {
+    SetConsoleTextAttribute(hdl_menu, color);
 }
 
-// 獲取當前時間
-void get_time() {
+// 獲取年
+int menu_get_time(int command) {
     time_t now = time(NULL);
     _time_ *tmp = localtime(&now);
-    start_time.year = tmp->tm_year;
-    start_time.month = tmp->tm_mon;
-    start_time.day = tmp->tm_mday;
-    start_time.hour = tmp->tm_hour;
-    start_time.minute = tmp->tm_min;
-    start_time.second = tmp->tm_sec;
+    if (command == 0) return (tmp->tm_year) *100 + tmp->tm_mon;
+    if (command == 1) return tmp->tm_year;
+
 }
 
-// 清空緩衝區
-void clear_keyboard_buffer() {
-    while (_kbhit()) {
-        _getch();
-    }
-}
+// 控制臺
+void Controller() {
+    int position = 1;
+    difficulty = 3;
+    map_scale = 1;
+    system("mode con cols=50 lines=10");
+    SetConsoleTitle("Main Menu - Snake Game ver alpha 0.0.1");
+    hdl_menu = GetStdHandle(STD_OUTPUT_HANDLE); // 获取终端句柄
 
-// 游戲本體
-void game(int difficulty, int map_scale_index, int color) {
-    // 讀取玩家名字
-    system("cls");
-    system("mode con cols=30 lines=10");
-    printf("Enter Your Name (len<=30)\n");
-    printf(">> ");
-    gets(player_name);
-
-    // 設置游戲時窗口大小
-    system("cls");
-    if (map_scale_index == 1) system("mode con cols=70 lines=27");
-    else if (map_scale_index == 2) system("mode con cols=80 lines=31");
-    else system("mode con cols=90 lines=35");
-    // 獲取玩家之前的數據
-    data_head = NULL;
-    read_score();
-    get_len();
-    get_time();
-
-    srand(time(NULL));
-    head = NULL;
-    int direction = 1;
-    int speed = (6 - difficulty) * 100 - 50;
-    int game_state = 0;
-    double map_size = map_scale_list[map_scale_index - 1];
-    score = 0;
-
-    COORD info_pos = {0,  (map_size * HEIGHT) + 4};
-
-    // 初始化：光标
-    hdl = GetStdHandle(STD_OUTPUT_HANDLE); // 获取终端句柄
     CONSOLE_CURSOR_INFO cursor_info;
-    GetConsoleCursorInfo(hdl, &cursor_info);
+    GetConsoleCursorInfo(hdl_menu, &cursor_info);
     cursor_info.bVisible = FALSE;
-    SetConsoleCursorInfo(hdl, &cursor_info);
-    SetConsoleTitle("Game - Snake");
-
-
-    // 绘制游戏界面
-    init_snake(map_size);
-    init_apple(map_size);
-    show_map(map_size);
-    show_snake(color);
-
-    SetConsoleCursorPosition(hdl, info_pos);
-    set_color(YELLOW | HIGH);
-    printf("Press UP DOWN LEFT RIGHT (or WASD) to move the snake\n");
-    printf("The game will start in ");
-    set_color(RED | HIGH);
-    for (int i = 3; i >= 1; i--) {
-        putchar('0' + i);
-        Sleep(1000);
-        SetConsoleCursorPosition(hdl, (COORD){23, (map_size * HEIGHT) + 5});
-    }
-    set_color(WHITE);
-    system("cls");
-
-    show_map(map_size);
-    show_apple();
+    SetConsoleCursorInfo(hdl_menu, &cursor_info);
+    display_main_menu(position);
 
 
     while (1) {
-        show_snake(color);
+        // 主菜单
+        Sleep(10);
         if (kbhit()) {
-            if (GetAsyncKeyState(VK_UP) && direction != 2) direction = 1;
-            else if (GetAsyncKeyState(VK_DOWN) && direction != 1) direction = 2;
-            else if (GetAsyncKeyState(VK_LEFT) && direction != 4) direction = 3;
-            else if (GetAsyncKeyState(VK_RIGHT) && direction != 3) direction = 4;
+            char ch = _getch();
+            fflush(stdin);
+            if (ch == 'w' || ch == 's' || ch == 'W' || ch == 'S' || ch == 72 || ch == 80) {
+                position = move_ptr(position, 4, ch);
+                system("cls");
+                display_main_menu(position);
+            }
 
-            else {
-                char ch;
-                ch = _getch();
-                // 判斷方向(如果玩家鍵入方向與當前方向相反，則不做任何更改)
-                if ((ch == 'w' || ch == 'W') && direction != 2) direction = 1;
-                else if ((ch == 's' || ch == 'S') && direction != 1) direction = 2;
-                else if ((ch == 'a' || ch == 'A') && direction != 4) direction = 3;
-                else if ((ch == 'd' || ch == 'D') && direction != 3) direction = 4;
-                clear_keyboard_buffer();
-                Sleep(100);
+            // 回车
+            else if (ch == '\r') {
+                choose_main(position, difficulty, map_scale);
+                position = 1;
+
+                // 重置窗口
+                system("cls");
+                SetConsoleTitle("Main Menu");
+                system("mode con cols=50 lines=10");
+                display_main_menu(position);
             }
         }
-
-        remove_object(tail->body_node);
-        refresh_snake(direction);
-
-        show_snake(color);
-        show_info(score, map_size, difficulty, map_scale_index);
-
-        // 判断游戏当前状态
-        game_state = get_state(map_size);
-
-        if (game_state == 1) {
-            SetConsoleCursorPosition(hdl, head->body_node);
-            set_color(RED);
-            putchar('X');
-            set_color(WHITE);
-            SetConsoleCursorPosition(hdl, info_pos);
-            printf("Game Over!!!\n"
-                "Press any key to continue...");
-            append_score(difficulty, map_scale_index);
-            break;
-        }
-
-        if (game_state == 2) {
-            score += 10;
-            expand_snake();
-            init_apple(map_size);
-            show_apple(map_size);
-        }
-
-
-
-        Sleep(speed);
     }
-
-
-    // 釋放内存以及存儲游戲數據
-    free_snake();
-    save_score();
-    free_score();
-
-    // 防止玩家按的過快導致直接開了新的游戲
-    Sleep(200);
-    while (1) { if (kbhit()) break; }
-    _getch();
 }
