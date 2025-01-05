@@ -25,6 +25,7 @@ HANDLE hdl;
 // 游戏界面
 double map_scale_list[] = {1, 1.2, 1.4};
 
+
 // 蛇
 snake_node *head; // 蛇的身体数组
 snake_node *tail;
@@ -63,14 +64,12 @@ void read_score();
 void append_score(int difficulty, int map_scale_);
 void free_score();
 void check_score();
-void get_len();
 void get_time();
 void clear_keyboard_buffer();
-
 // ========================================================================================================
 
 
-// 顯示地圖
+// 显示地图
 void show_map() {
     for (int i = 0; i <= (int) (map_size * HEIGHT) + 2; i++) {
         for (int j = 0; j <= (int) (map_size * WIDTH) + 2; j++) {
@@ -84,7 +83,7 @@ void show_map() {
     }
 }
 
-// 顯示分數
+// 显示分数
 void show_info(int score, int difficulty, int map_scale_) {
     // 顯示玩家名稱
     COORD pos = {(int) (WIDTH * map_size) + 5, 0};
@@ -256,7 +255,7 @@ void init_obstacle(int difficulty) {
     }
 }
 
-// 顯示蛇
+// 显示蛇
 void show_snake(int color) {
     snake_node *current = head;
     int i = 0;
@@ -277,7 +276,7 @@ void show_snake(int color) {
     set_color(WHITE);
 }
 
-// 顯示苹果
+// 显示苹果
 void show_apple() {
     SetConsoleCursorPosition(hdl, apple);
     set_color(RED | HIGH);
@@ -336,7 +335,7 @@ void remove_object(COORD obj_pos) {
     putchar(' ');
 }
 
-// 獲取當前狀態
+// 获取当前状态
 int get_state() {
     // 0 -> 游戏继续
     // 1 -> 游戏结束
@@ -375,7 +374,7 @@ int get_state() {
     return 0;
 }
 
-// 蛇長度增加
+// 增长蛇
 void expand_snake() {
     snake_node *new_tail = (snake_node *) malloc(sizeof(snake_node));
 
@@ -388,7 +387,7 @@ void expand_snake() {
     tail = new_tail;
 }
 
-// 釋放内存
+// 释放内存
 void free_node() {
     snake_node *current = head;
     snake_node *last = NULL;
@@ -409,7 +408,7 @@ void free_node() {
     }
 }
 
-// 保存數據
+// 保存数据
 void save_score() {
     FILE *file = fopen("rank.txt", "w");
 
@@ -428,12 +427,13 @@ void save_score() {
     fclose(file);
 }
 
-// 讀取數據
+// 读取数据
 void read_score() {
     FILE *file = fopen("rank.txt", "r");
     data_head = NULL;
     data_node *last = NULL;
     char tmp_name[40];
+    len = 0;
 
     while (1) {
         if (fgets(tmp_name, 40, file) == NULL) break;
@@ -457,12 +457,13 @@ void read_score() {
             last->next = new_node;
             last = new_node;
         }
+        len += 1;
     }
 
     fclose(file);
 }
 
-// 添加數據
+// 添加数据
 void append_score(int difficulty, int map_scale_) {
     data_node *new_node = (data_node *) malloc(sizeof(data_node));
 
@@ -500,7 +501,12 @@ void append_score(int difficulty, int map_scale_) {
     data_node *current = data_head;
     data_node *last = NULL;
 
-    while (current != NULL && current->score > new_node->score) {
+    while (current != NULL) {
+        if (current->score <= new_node->score ||
+            (current->score == new_node->score &&
+            current->difficulty <= new_node->difficulty)) break;
+
+
         last = current;
         current = current->next;
     }
@@ -530,7 +536,7 @@ void append_score(int difficulty, int map_scale_) {
     }
 }
 
-// 釋放玩家數據
+// 释放玩家数据链表
 void free_score() {
     data_node *current = data_head;
     data_node *last = NULL;
@@ -542,22 +548,12 @@ void free_score() {
     }
 }
 
-// 獲取排行榜長度
-void get_len() {
-    data_node *current = data_head;
-    len = 0;
-    while (current) {
-        current = current->next;
-        len += 1;
-    }
-}
-
-// 設置文本顔色
+// 设置文本颜色
 void set_color(int color) {
     SetConsoleTextAttribute(hdl, color);
 }
 
-// 獲取當前時間
+// 获取当前时间
 void get_time() {
     time_t now = time(NULL);
     _time_ *tmp = localtime(&now);
@@ -569,31 +565,58 @@ void get_time() {
     start_time.second = tmp->tm_sec;
 }
 
-// 清空緩衝區
+// 清空缓冲区
 void clear_keyboard_buffer() {
     while (_kbhit()) {
         _getch();
     }
 }
 
-// 游戲本體
+// 显示退出提示
+void display_quit_info(COORD info_pos) {
+    SetConsoleCursorPosition(hdl, info_pos);
+    set_color(WHITE);
+    printf("Are You Really Want to QUIT?\n");
+    printf("If ");
+    set_color(GREEN | HIGH);
+    printf("Yes");
+    set_color(WHITE);
+    printf(", Press");
+    set_color(YELLOW | HIGH);
+    printf(" Enter\n");
+    set_color(WHITE);
+    printf("If ");
+    set_color(RED | HIGH);
+    printf("No");
+    set_color(WHITE);
+    printf(", Press");
+    set_color(YELLOW | HIGH);
+    printf(" Esc\n");
+    set_color(RED | HIGH);
+    printf("IF you QUIT, your current game data will be ERASED!!!");
+    set_color(WHITE);
+}
+
+// 游戏本体
 void game(int difficulty, int map_scale_index, int color) {
-    // 讀取玩家名字
+    // 读取玩家名字
     system("cls");
     system("mode con cols=30 lines=10");
     printf("Enter Your Name (len<=30)\n");
-    printf(">> ");
+    printf(">> \n");
+    SetConsoleCursorPosition(hdl, (COORD){3, 2});
     gets(player_name);
 
-    // 設置游戲時窗口大小
+
+
+    // 设置游戏窗口大小
     system("cls");
-    if (map_scale_index == 1) system("mode con cols=70 lines=27");
-    else if (map_scale_index == 2) system("mode con cols=80 lines=31");
-    else system("mode con cols=90 lines=35");
-    // 獲取玩家之前的數據
+    if (map_scale_index == 1) system("mode con cols=70 lines=28");
+    else if (map_scale_index == 2) system("mode con cols=80 lines=32");
+    else system("mode con cols=90 lines=36");
+    // 获取玩家之前的数据
     data_head = NULL;
     read_score();
-    get_len();
     get_time();
 
     srand(time(NULL));
@@ -605,7 +628,9 @@ void game(int difficulty, int map_scale_index, int color) {
     head = NULL;
     head_obs = NULL;
 
+
     COORD info_pos = {0,  (map_size * HEIGHT) + 4};
+
 
     // 初始化：光标
     hdl = GetStdHandle(STD_OUTPUT_HANDLE); // 获取终端句柄
@@ -653,12 +678,29 @@ void game(int difficulty, int map_scale_index, int color) {
             else {
                 char ch;
                 ch = _getch();
-                // 判斷方向(如果玩家鍵入方向與當前方向相反，則不做任何更改)
+                // 判断转向(若键入的方向与当期方向反向，则不做更改)
                 if ((ch == 'w' || ch == 'W') && direction != 2) direction = 1;
                 else if ((ch == 's' || ch == 'S') && direction != 1) direction = 2;
                 else if ((ch == 'a' || ch == 'A') && direction != 4) direction = 3;
                 else if ((ch == 'd' || ch == 'D') && direction != 3) direction = 4;
                 clear_keyboard_buffer();
+
+                if (ch == 27) {
+                    display_quit_info(info_pos);
+                    while (1) {
+                        if (kbhit()) {
+                            char quit_ch = _getch();
+                            if (quit_ch == 27) {
+                                system("cls");
+                                show_map();
+                                show_apple();
+                                break;
+                            }
+                            if (quit_ch == '\r') return;
+                        }
+                    }
+                }
+
             }
         }
 
@@ -695,12 +737,12 @@ void game(int difficulty, int map_scale_index, int color) {
     }
 
 
-    // 釋放内存以及存儲游戲數據
+    // 释放内存以及存储游戏数据
     free_node();
     save_score();
     free_score();
 
-    // 防止玩家按的過快導致直接開了新的游戲
+    // 防止玩家按得过快而直接开始下一场游戏
     Sleep(200);
     while (1) { if (kbhit()) break; }
     _getch();
