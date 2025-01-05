@@ -1,7 +1,3 @@
-//
-// Created by HONOR on 25-1-1.
-//
-
 #include "game.h"
 #include <windows.h>
 #include <conio.h>
@@ -26,10 +22,8 @@ char Map_Scale[3][10] = {
 // ========================================================================================================
 HANDLE hdl;
 
-double map_scale_list[] = {1, 1.2, 1.4};
-
 // 游戏界面
-
+double map_scale_list[] = {1, 1.2, 1.4};
 
 // 蛇
 snake_node *head; // 蛇的身体数组
@@ -49,39 +43,22 @@ time_i start_time;
 
 // 声明
 void show_map(double map_size);
-
 void show_info(int score, double map_size, int difficulty, int map_scale_);
-
 void show_snake();
-
 void init_snake(double map_size);
-
 void init_apple(double map_size);
-
 void show_apple();
-
 void refresh_snake(int direction);
-
 void remove_object(COORD obj_pos);
-
 void set_color(int color);
-
 int get_state(double map_size);
-
 void save_score();
-
 void read_score();
-
 void append_score(int difficulty, int map_scale_);
-
 void free_score();
-
 void check_score();
-
 void get_len();
-
 void get_time();
-
 void clear_keyboard_buffer();
 
 // ========================================================================================================
@@ -106,29 +83,57 @@ void show_info(int score, double map_size, int difficulty, int map_scale_) {
     // 顯示玩家名稱
     COORD pos = {(int) (WIDTH * map_size) + 5, 0};
     SetConsoleCursorPosition(hdl, pos);
-    printf("Player: %s", player_name);
+    printf("Player: ");
+    set_color(YELLOW | HIGH);
+    printf("%s", player_name);
+
 
     // 顯示分數
     pos = (COORD){(int) (WIDTH * map_size) + 5, 1};
     SetConsoleCursorPosition(hdl, pos);
-    printf("Score: %d", score);
+    printf("Score: ", score);
+    set_color(BLUE | HIGH);
+    printf("%d", score);
+    set_color(WHITE);
 
     // 顯示游戲難度
     pos = (COORD){(int) (WIDTH * map_size) + 5, 2};
     SetConsoleCursorPosition(hdl, pos);
-    printf("Difficulty: %s", Game_Difficulty[difficulty - 1]);
+    printf("Difficulty: ");
+    switch (difficulty) {
+        case 1:
+            set_color(LIGHT_GREEN | HIGH);
+            break;
+        case 2:
+            set_color(BLUE | HIGH);
+            break;
+        case 3:
+            set_color(YELLOW | HIGH);
+            break;
+        case 4:
+            set_color(RED | HIGH);
+            break;
+        case 5:
+            set_color(PURPLE | HIGH);
+            break;
+    }
+    printf("%s", Game_Difficulty[difficulty-1]);
+    set_color(WHITE);
 
     // 顯示地圖大小
     pos = (COORD){(int) (WIDTH * map_size) + 5, 3};
     SetConsoleCursorPosition(hdl, pos);
-    printf("Map Scale: %s", Map_Scale[map_scale_ - 1]);
+    printf("Map Scale: ");
+    set_color(YELLOW);
+    printf("%s", Map_Scale[map_scale_ - 1]);
 
     // 顯示當前時間
+    set_color(LIGHT_BLUE | HIGH);
     pos = (COORD){(int) (WIDTH * map_size) + 5, 4};
     SetConsoleCursorPosition(hdl, pos);
     time_t cur_time = time(NULL);
     struct tm *cur_time_ = localtime(&cur_time);
-    char buffer[80];
+    char buffer[25];
     strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", cur_time_);
     printf("%s", buffer);
 }
@@ -539,13 +544,13 @@ void game(int difficulty, int map_scale_index, int color) {
                 char ch;
                 ch = _getch();
                 // 判斷方向(如果玩家鍵入方向與當前方向相反，則不做任何更改)
-                if (ch == 'w' || ch == 'W' && direction != 2) direction = 1;
-                else if (ch == 's' || ch == 'S' && direction != 1) direction = 2;
-                else if (ch == 'a' || ch == 'A' && direction != 4) direction = 3;
-                else if (ch == 'd' || ch == 'D' && direction != 3) direction = 4;
+                if ((ch == 'w' || ch == 'W') && direction != 2) direction = 1;
+                else if ((ch == 's' || ch == 'S') && direction != 1) direction = 2;
+                else if ((ch == 'a' || ch == 'A') && direction != 4) direction = 3;
+                else if ((ch == 'd' || ch == 'D') && direction != 3) direction = 4;
+                clear_keyboard_buffer();
+                Sleep(100);
             }
-
-            clear_keyboard_buffer();
         }
 
         remove_object(tail->body_node);
