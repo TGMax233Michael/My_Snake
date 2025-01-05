@@ -224,13 +224,13 @@ void display_map_scale_menu(int pos) {
 
 // 顯示蛇的模型
 void display_snake_model(int color) {
-    SetConsoleCursorPosition(hdl_menu, (COORD){14, 1});
+    SetConsoleCursorPosition(hdl_menu, (COORD){13, 1});
     printf("|EXAMPLE|");
     for (int i = 0; i < 4; i++) {
-        SetConsoleCursorPosition(hdl_menu, (COORD){18, 2+i});
+        SetConsoleCursorPosition(hdl_menu, (COORD){17, 2+i});
         if (i == 0) {
             set_text_color(GREEN);
-            putchar('@');
+            putchar('O');
         } else {
             set_text_color(color);
             putchar('o');
@@ -243,7 +243,7 @@ void display_snake_model(int color) {
 
 // 顯示顔色選擇菜單
 void display_color_menu(int pos) {
-    printf("===COLOUR===");
+    printf("===COLOR===");
     printf("\n");
 
     for (int i = 0; i < 6; i++) {
@@ -275,7 +275,7 @@ void display_color_menu(int pos) {
     }
 
     set_text_color(WHITE);
-    printf("============");
+    printf("===========");
     printf("\n");
     printf("Press Up and Down (or W and S) to move the cursor\n"
         "Press Enter to confirm\n");
@@ -307,10 +307,10 @@ void display_rank_menu(int pos) {
 
 // 顯示當前游戲設置
 void display_current_game_settings() {
-    SetConsoleCursorPosition(hdl_menu, (COORD){25, 1});
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 1});
     printf("CURRENT GAME SETTINGS");
 
-    SetConsoleCursorPosition(hdl_menu, (COORD){25, 2});
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 2});
     printf("Difficulty: ");
     switch (difficulty) {
         case 1:
@@ -464,7 +464,7 @@ void choose_setting(int pos) {
         case 1:
             // 顯示難度選擇窗口
             system("cls");
-            system("mode con cols=50 lines=13");
+            system("mode con cols=50 lines=12");
             SetConsoleTitle("Settings - Difficulty");
             int difficulty_pos = 1;
             display_difficulty_menu(difficulty_pos);
@@ -481,6 +481,7 @@ void choose_setting(int pos) {
                     if (ch == '\r') {
                         if (difficulty_pos < 6) difficulty = difficulty_pos;
                         system("cls");
+                        system("mode con cols=50 lines=10");
                         break;
                     }
                 }
@@ -513,7 +514,7 @@ void choose_setting(int pos) {
 
         case 3:
             system("cls");
-            system("mode con cols=60 lines=13");
+            system("mode con cols=60 lines=12");
             SetConsoleTitle("Settings - Snake Color");
             int color_pos = 1;
             display_color_menu(color_pos);
@@ -634,12 +635,12 @@ void display_rank(int command) {
 
         set_text_color(WHITE);
         printf("Player Name: ");
-        set_text_color(YELLOW);
+        set_text_color(YELLOW | HIGH);
         printf("%s\n", current->name);
 
         set_text_color(WHITE);
         printf("Score: ");
-        set_text_color(LIGHT_BLUE);
+        set_text_color(LIGHT_BLUE | HIGH);
         printf("%d\n", current->score);
 
         set_text_color(WHITE);
@@ -665,12 +666,12 @@ void display_rank(int command) {
         printf("%s\n", Game_Difficulty_Setting[current->difficulty - 1]);
         set_text_color(WHITE);
         printf("Map Scale: ");
-        set_text_color(LIGHT_GREEN);
+        set_text_color(LIGHT_GREEN | HIGH);
         printf("%s\n", Map_Scale_Setting[current->map_scale - 1]);
 
         set_text_color(WHITE);
         printf("Play Time: ");
-        set_text_color(LIGHT_BLUE);
+        set_text_color(LIGHT_BLUE | HIGH);
         printf("%.4d-%.2d-%.2d %.2d:%.2d:%.2d\n",
                 current->time_info.year+1900, current->time_info.month+1,
                 current->time_info.day, current->time_info.hour,
