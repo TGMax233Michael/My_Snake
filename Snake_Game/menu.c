@@ -55,7 +55,7 @@ int color = WHITE;
 data_node *_head = NULL;
 HANDLE hdl_menu;
 // ##########################################################################################################
-// 聲明
+// 声明
 void display_main_menu(int pos);
 
 void display_difficulty_menu(int pos);
@@ -77,9 +77,11 @@ void display_rank(int command);
 int menu_get_time(int command);
 
 void display_current_game_settings();
+
+void display_rank_info_special();
 // ##########################################################################################################
 
-// 顯示主菜單
+// 显示主菜单
 void display_main_menu(int pos) {
     printf("=====MAIN MENU=====");
     printf("\n");
@@ -107,7 +109,33 @@ void display_main_menu(int pos) {
     display_current_game_settings();
 }
 
-// 顯示困難選擇菜單
+// 顯示设置菜單
+void display_setting_menu(int pos) {
+    printf("====SETTINGS====");
+    printf("\n");
+
+    set_text_color(YELLOW);
+    for (int i = 0; i < 4; i++) {
+        if (i != pos - 1) printf("  %s\n", Game_Setting[i]);
+        else {
+            set_text_color(WHITE);
+            printf(">>");
+            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
+            printf("%s\n", Game_Setting[i]);
+            set_text_color(YELLOW);
+        }
+    }
+
+    set_text_color(WHITE);
+    printf("================");
+    printf("\n");
+    printf("Press Up and Down (or W and S) to move the cursor\n"
+        "Press Enter to confirm\n");
+
+    display_current_game_settings();
+}
+
+// 显示困难选择菜单
 void display_difficulty_menu(int pos) {
     printf("==DIFFICULTY==");
     printf("\n");
@@ -172,33 +200,7 @@ void display_difficulty_menu(int pos) {
     display_current_game_settings();
 }
 
-// 顯示設置菜單
-void display_setting_menu(int pos) {
-    printf("====SETTINGS====");
-    printf("\n");
-
-    set_text_color(YELLOW);
-    for (int i = 0; i < 4; i++) {
-        if (i != pos - 1) printf("  %s\n", Game_Setting[i]);
-        else {
-            set_text_color(WHITE);
-            printf(">>");
-            set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
-            printf("%s\n", Game_Setting[i]);
-            set_text_color(YELLOW);
-        }
-    }
-
-    set_text_color(WHITE);
-    printf("================");
-    printf("\n");
-    printf("Press Up and Down (or W and S) to move the cursor\n"
-        "Press Enter to confirm\n");
-
-    display_current_game_settings();
-}
-
-// 顯示地圖尺寸選擇菜單
+// 显示地图尺寸菜单
 void display_map_scale_menu(int pos) {
     printf("==MAP SCALE==");
     printf("\n");
@@ -222,7 +224,7 @@ void display_map_scale_menu(int pos) {
     display_current_game_settings();
 }
 
-// 顯示蛇的模型
+// 显示蛇的演示模型
 void display_snake_model(int color) {
     SetConsoleCursorPosition(hdl_menu, (COORD){13, 1});
     printf("|EXAMPLE|");
@@ -241,7 +243,7 @@ void display_snake_model(int color) {
     SetConsoleCursorPosition(hdl_menu, (COORD){0, 0});
 }
 
-// 顯示顔色選擇菜單
+// 显示颜色选择菜单
 void display_color_menu(int pos) {
     printf("===COLOR===");
     printf("\n");
@@ -283,7 +285,7 @@ void display_color_menu(int pos) {
     display_current_game_settings();
 }
 
-// 顯示排行榜類別選擇菜單
+// 显示排行榜类别显示菜单
 void display_rank_menu(int pos) {
     printf("====RANK====");
     printf("\n");
@@ -305,7 +307,7 @@ void display_rank_menu(int pos) {
         "Press Enter to confirm\n");
 }
 
-// 顯示當前游戲設置
+// 显示当前游戏设置
 void display_current_game_settings() {
     SetConsoleCursorPosition(hdl_menu, (COORD){24, 1});
     printf("CURRENT GAME SETTINGS");
@@ -333,13 +335,13 @@ void display_current_game_settings() {
 
 
     set_text_color(WHITE);
-    SetConsoleCursorPosition(hdl_menu, (COORD){25, 3});
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 3});
     printf("Map Scale: ");
     set_text_color(YELLOW | HIGH);
     printf("%s", Map_Scale_Setting[map_scale-1]);
 
     set_text_color(WHITE);
-    SetConsoleCursorPosition(hdl_menu, (COORD){25, 4});
+    SetConsoleCursorPosition(hdl_menu, (COORD){24, 4});
     printf("Snake Color: ");
     set_text_color(color);
     switch (color) {
@@ -364,7 +366,26 @@ void display_current_game_settings() {
     SetConsoleCursorPosition(hdl_menu, (COORD){0, 0});
 }
 
-// 光標移動
+// 显示有关排行榜的相关信息
+void display_rank_info_special() {
+    SetConsoleCursorPosition(hdl_menu, (COORD){36, 1});
+    printf("DISPLAY ORDER");
+
+    SetConsoleCursorPosition(hdl_menu, (COORD){36, 2});
+    printf("1. ");
+    set_text_color(LIGHT_BLUE | HIGH);
+    printf("Score");
+    set_text_color(WHITE);
+    SetConsoleCursorPosition(hdl_menu, (COORD){36, 3});
+    printf("2. ");
+    set_text_color(LIGHT_YELLOW | HIGH);
+    printf("Difficulty");
+    set_text_color("WHITE");
+
+    SetConsoleCursorPosition(hdl_menu, (COORD){0, 1});
+}
+
+// 光标移动
 int move_ptr(int pos, int max_index, char ch) {
     if (ch == 'w' || ch == 'W' || ch == 72) {
         if (pos > 1) return pos - 1;
@@ -378,18 +399,18 @@ int move_ptr(int pos, int max_index, char ch) {
     return pos;
 }
 
-// 選擇主菜單
+// 主菜单选项
 void choose_main(int pos, int difficulty, int map_scale) {
     switch (pos) {
         case 1:
             game(difficulty, map_scale, color);
 
-        // 重置難度
+        // 重置难度
             difficulty = 3;
             map_scale = 1;
             break;
         case 2:
-            // 顯示設置窗口
+            // 显示窗口
             system("cls");
             SetConsoleTitle("Settings");
             int setting_pos = 1;
@@ -433,7 +454,7 @@ void choose_main(int pos, int difficulty, int map_scale) {
                     }
                     if (ch == '\r') {
                         if (rank_pos <= 2) {
-                            system("mode con cols=50 lines=36");
+                            system("mode con cols=50 lines=33");
                             display_rank(rank_pos - 1);
                             set_text_color(GREEN | DARK_GRAY << 4 | HIGH);
                             printf(">>Back\n");
@@ -458,11 +479,11 @@ void choose_main(int pos, int difficulty, int map_scale) {
     }
 }
 
-// 選擇設置菜單
+// 设置菜单选项
 void choose_setting(int pos) {
     switch (pos) {
         case 1:
-            // 顯示難度選擇窗口
+            // 选择难度
             system("cls");
             system("mode con cols=50 lines=12");
             SetConsoleTitle("Settings - Difficulty");
@@ -489,7 +510,7 @@ void choose_setting(int pos) {
             break;
 
         case 2:
-            // 顯示地圖大小選擇窗口
+            // 选择地图大小
             system("cls");
             SetConsoleTitle("Settings - Map Scale");
             int map_scale_pos = 1;
@@ -575,7 +596,7 @@ void choose_setting(int pos) {
     }
 }
 
-// 讀取資料
+// 读取之前的信息
 void read_data() {
     FILE *file = fopen("rank.txt", "r");
     _head = NULL;
@@ -609,21 +630,29 @@ void read_data() {
     fclose(file);
 }
 
-// 顯示名次
+// 显示排行榜
 void display_rank(int command) {
     int condition;
-    if (command == 0) condition = menu_get_time(0);
-    else if (command == 1) condition = menu_get_time(1);
+    if (command == 0) {
+        printf("==========MONTH=RANK==========\n");
+        condition = menu_get_time(0);
+    }
+    else if (command == 1) {
+        printf("==========YEAR==RANK==========\n");
+        condition = menu_get_time(1);
+    }
     else return;
 
     int i = 0;
     data_node *current = _head;
 
-    printf("=============RANK=============\n");
+
     if (_head == NULL) {
         printf("No Data!\n");
         printf("==============================\n");
     }
+
+    display_rank_info_special();
 
     while (i < 5 && current != NULL) {
         // 如果不是今年的, 則直接跳過
@@ -686,12 +715,12 @@ void display_rank(int command) {
 
 }
 
-// 設置文本顔色
+// 设置文本颜色
 void set_text_color(int color) {
     SetConsoleTextAttribute(hdl_menu, color);
 }
 
-// 獲取年
+// 获取时间当前年/月
 int menu_get_time(int command) {
     time_t now = time(NULL);
     _time_ *tmp = localtime(&now);
@@ -700,13 +729,13 @@ int menu_get_time(int command) {
 
 }
 
-// 控制臺
+// 控制台
 void Controller() {
     int position = 1;
     difficulty = 3;
     map_scale = 1;
     system("mode con cols=50 lines=10");
-    SetConsoleTitle("Main Menu - Snake Game ver alpha 0.0.1");
+    SetConsoleTitle("Main Menu - Snake Game ver alpha 0.0.2");
     hdl_menu = GetStdHandle(STD_OUTPUT_HANDLE); // 获取终端句柄
 
     CONSOLE_CURSOR_INFO cursor_info;
